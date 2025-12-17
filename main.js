@@ -315,30 +315,76 @@ window.setBlockType = (type) => {
     currentBlockType = type;
 };
 
-window.saveLevel = () => {
-    const blocks = [];
-    // Collect all meshes that are part of the level
-    scene.traverse(child => {
-        if (child.isMesh && child.userData.type && child !== player && child.name !== 'basePlane') {
-            blocks.push({
-                type: child.userData.type,
-                pos: [child.position.x, child.position.y, child.position.z]
-            });
+window.saveLevel = async () => {
+    console.log("Saving level...");
+    try {
+        const blocks = [];
+        scene.traverse(child => {
+            if (child.isMesh && child.userData && child.userData.type && child !== player && child.name !== 'basePlane') {
+                blocks.push({
+                    type: child.userData.type,
+                    pos: [child.position.x, child.position.y, child.position.z]
+                });
+            }
+        });
+        const level = {
+            metadata: { name: "New Level", author: "Player", timestamp: new Date().toISOString() },
+            blocks: blocks
+        };
+        const json = JSON.stringify(level, null, 2);
+
+        // 1. Try File System Access API (Best for Chrome/Edge)
+        if (window.showSaveFilePicker) {
+            try {
+                const handle = await window.showSaveFilePicker({
+                    suggestedName: 'level.json',
+                    types: [{ description: 'JSON File', accept: { 'application/json': ['.json'] } }]
+                });
+                const writable = await handle.createWritable();
+                await writable.write(json);
+                await writable.close();
+                console.log("Saved via File System API");
+                return;
+            } catch (e) {
+                if (e.name === 'AbortError') return;
+                console.warn("File System API failed, using fallback", e);
+            }
         }
-    });
-    const level = {
-        metadata: { name: "New Level", author: "Player" },
-        blocks: blocks
-    };
-    const blob = new Blob([JSON.stringify(level, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'level.json';
-    a.click();
+
+        // 2. Fallback: Classic Download
+        const blob = new Blob([json], { type: 'application/octet-stream' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = 'level.json';
+        document.body.appendChild(a);
+        a.click();
+
+        // 3. Ultimate Fallback: Clipboard
+        const useClipboard = confirm("Download triggered. If the file name is a UUID or the download failed, click OK to copy the level data to your clipboard as a backup.");
+        if (useClipboard) {
+            await navigator.clipboard.writeText(json);
+            alert("Level data copied to clipboard! You can paste it into a .json file.");
+        }
+
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 10000);
+    } catch (err) {
+        console.error("Save Level Error:", err);
+        alert("Error saving level: " + err.message + "\nCheck console (F12) for data.");
+        console.log("LEVEL DATA:", JSON.stringify(level, null, 2));
+    }
 };
 
 function onKeyDown(event) {
+    if (event.ctrlKey && event.key === 's') {
+        event.preventDefault();
+        saveLevel();
+        return;
+    }
     if (gameState !== 'playing' || isMoving) return;
 
     let dir = new THREE.Vector3();
@@ -580,6 +626,23 @@ function onWindowResize() {
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
 }
+
+window.exitToMenu = () => {
+    fadeTransition(() => {
+        gameState = 'menu';
+        document.getElementById('menu').style.display = 'block';
+        document.getElementById('hud').style.display = 'none';
+        document.getElementById('editor-ui').style.display = 'none';
+        controls.enabled = false;
+        // Clear scene except lights
+        while (scene.children.length > 2) {
+            const child = scene.children[scene.children.length - 1];
+            scene.remove(child);
+        }
+        ghostBlock = null;
+        levelData = {};
+    });
+};
 
 // --- Game Logic ---
 window.loadLevelFromFile = () => {
