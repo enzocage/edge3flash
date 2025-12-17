@@ -606,6 +606,23 @@ window.startEditor = () => {
     });
 };
 
+function setupLevel() {
+    // Placeholder for level loading
+    for (let x = -2; x <= 2; x++) {
+        for (let z = -2; z <= 2; z++) {
+            addBlock(x, 0, z, 'normal');
+        }
+    }
+
+    // Player
+    const playerGeo = new THREE.BoxGeometry(1, 1, 1);
+    const playerMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    player = new THREE.Mesh(playerGeo, playerMat);
+    player.position.set(0, 1, 0);
+    player.castShadow = true;
+    scene.add(player);
+}
+
 function setupEditor() {
     const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
     scene.add(gridHelper);
