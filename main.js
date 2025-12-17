@@ -15,6 +15,8 @@ let startTime = 0;
 let spawnPos = new THREE.Vector3(0, 1, 0);
 let prisms = [];
 let collectedPrisms = 0;
+let edgeTime = 0;
+let isBalancing = false;
 let movingPlatforms = [];
 let switches = [];
 let ghostBlocks = [];
@@ -24,6 +26,11 @@ let currentBlockType = 'normal';
 let raycaster = new THREE.Raycaster();
 let mouse = new THREE.Vector2();
 let ghostBlock;
+let undoStack = [];
+let redoStack = [];
+const MAX_UNDO = 50;
+
+let audioCtx = null;
 
 // --- Initialization ---
 function init() {
@@ -123,7 +130,7 @@ function onMouseMove(event) {
         pos.x = Math.round(pos.x);
         pos.y = Math.round(pos.y);
         pos.z = Math.round(pos.z);
-        
+
         if (!ghostBlock) {
             ghostBlock = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.5 }));
             scene.add(ghostBlock);
@@ -151,14 +158,68 @@ function onMouseDown(event) {
             } else {
                 pos = intersect.point.clone();
             }
-            addBlock(Math.round(pos.x), Math.round(pos.y), Math.round(pos.z), currentBlockType);
+            const x = Math.round(pos.x);
+            const y = Math.round(pos.y);
+            const z = Math.round(pos.z);
+            executeCommand(new AddBlockCommand(x, y, z, currentBlockType));
         } else if (currentTool === 'eraser') {
             if (intersect.object.type === 'Mesh' && intersect.object !== player && intersect.object.name !== 'basePlane') {
-                removeBlock(intersect.object);
+                executeCommand(new RemoveBlockCommand(intersect.object));
             }
         }
     }
 }
+
+// --- Command Pattern ---
+class AddBlockCommand {
+    constructor(x, y, z, type) {
+        this.x = x; this.y = y; this.z = z; this.type = type;
+        this.mesh = null;
+    }
+    execute() {
+        this.mesh = addBlock(this.x, this.y, this.z, this.type);
+    }
+    undo() {
+        if (this.mesh) removeBlock(this.mesh, false);
+    }
+}
+
+class RemoveBlockCommand {
+    constructor(mesh) {
+        this.mesh = mesh;
+        this.x = mesh.position.x;
+        this.y = mesh.position.y;
+        this.z = mesh.position.z;
+        this.type = mesh.userData.type;
+    }
+    execute() {
+        removeBlock(this.mesh, false);
+    }
+    undo() {
+        this.mesh = addBlock(this.x, this.y, this.z, this.type);
+    }
+}
+
+function executeCommand(command) {
+    command.execute();
+    undoStack.push(command);
+    if (undoStack.length > MAX_UNDO) undoStack.shift();
+    redoStack = []; // Clear redo on new action
+}
+
+window.undo = () => {
+    if (undoStack.length === 0) return;
+    const command = undoStack.pop();
+    command.undo();
+    redoStack.push(command);
+};
+
+window.redo = () => {
+    if (redoStack.length === 0) return;
+    const command = redoStack.pop();
+    command.execute();
+    undoStack.push(command);
+};
 
 function addBlock(x, y, z, type = 'normal') {
     const key = `${x},${y},${z}`;
@@ -226,13 +287,23 @@ function addBlock(x, y, z, type = 'normal') {
     mesh.receiveShadow = true;
     mesh.castShadow = true;
     scene.add(mesh);
+    return mesh;
 }
 
-function removeBlock(mesh) {
-    const key = `${mesh.position.x},${mesh.position.y},${mesh.position.z}`;
-    delete levelData[key];
+function removeBlock(mesh, updateData = true) {
+    if (updateData) {
+        const key = `${mesh.position.x},${mesh.position.y},${mesh.position.z}`;
+        delete levelData[key];
+    }
     const prismIndex = prisms.indexOf(mesh);
     if (prismIndex > -1) prisms.splice(prismIndex, 1);
+    const movingIndex = movingPlatforms.indexOf(mesh);
+    if (movingIndex > -1) movingPlatforms.splice(movingIndex, 1);
+    const switchIndex = switches.indexOf(mesh);
+    if (switchIndex > -1) switches.splice(switchIndex, 1);
+    const ghostIndex = ghostBlocks.indexOf(mesh);
+    if (ghostIndex > -1) ghostBlocks.splice(ghostIndex, 1);
+
     scene.remove(mesh);
 }
 
@@ -276,6 +347,8 @@ function onKeyDown(event) {
         case 'ArrowDown': case 's': dir.set(0, 0, 1); break;
         case 'ArrowLeft': case 'a': dir.set(-1, 0, 0); break;
         case 'ArrowRight': case 'd': dir.set(1, 0, 0); break;
+        case 'z': if (event.ctrlKey) undo(); break;
+        case 'y': if (event.ctrlKey) redo(); break;
         default: return;
     }
 
@@ -295,7 +368,7 @@ function climbCube(direction) {
     isMoving = true;
     const pivot = player.position.clone().add(direction.clone().multiplyScalar(0.5)).add(new THREE.Vector3(0, 0.5, 0));
     const axis = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), direction).normalize();
-    
+
     const startRotation = player.quaternion.clone();
     const startPosition = player.position.clone();
     const targetPosition = player.position.clone().add(direction).add(new THREE.Vector3(0, 1, 0));
@@ -312,7 +385,7 @@ function climbCube(direction) {
         player.position.copy(startPosition);
         player.quaternion.copy(startRotation);
         player.rotateOnWorldAxis(axis, angle);
-        
+
         const offset = startPosition.clone().sub(pivot);
         offset.applyAxisAngle(axis, angle);
         player.position.copy(pivot.clone().add(offset));
@@ -322,6 +395,7 @@ function climbCube(direction) {
         } else {
             player.position.set(Math.round(targetPosition.x), Math.round(targetPosition.y), Math.round(targetPosition.z));
             isMoving = false;
+            playSound('climb');
             checkPhysics();
         }
     }
@@ -330,14 +404,14 @@ function climbCube(direction) {
 
 function rollCube(direction) {
     isMoving = true;
-    
+
     // Pivot point is the edge in the direction of movement
     const pivot = player.position.clone().add(direction.clone().multiplyScalar(0.5)).add(new THREE.Vector3(0, -0.5, 0));
     const axis = new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), direction).normalize();
-    
+
     const startRotation = player.quaternion.clone();
     const targetRotation = new THREE.Quaternion().setFromAxisAngle(axis, Math.PI / 2).multiply(startRotation);
-    
+
     const startPosition = player.position.clone();
     const targetPosition = player.position.clone().add(direction);
 
@@ -353,10 +427,10 @@ function rollCube(direction) {
         const angle = (Math.PI / 2) * progress;
         player.position.copy(startPosition);
         player.quaternion.copy(startRotation);
-        
+
         // Apply rotation around pivot
         player.rotateOnWorldAxis(axis, angle);
-        
+
         // Adjust position to stay on pivot
         const offset = startPosition.clone().sub(pivot);
         offset.applyAxisAngle(axis, angle);
@@ -365,10 +439,23 @@ function rollCube(direction) {
         if (progress < 1) {
             requestAnimationFrame(animateRoll);
         } else {
-            // Snap to grid
-            player.position.set(Math.round(targetPosition.x), Math.round(targetPosition.y), Math.round(targetPosition.z));
-            isMoving = false;
-            checkPhysics();
+            // Check if target has floor
+            const targetFloorKey = `${Math.round(targetPosition.x)},${Math.round(targetPosition.y - 1)},${Math.round(targetPosition.z)}`;
+            if (!levelData[targetFloorKey]) {
+                // Enter balancing state
+                isBalancing = true;
+                player.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
+                // Tilt slightly to show balancing
+                player.rotation.z += 0.1;
+                isMoving = false;
+            } else {
+                // Snap to grid
+                player.position.set(Math.round(targetPosition.x), Math.round(targetPosition.y), Math.round(targetPosition.z));
+                isMoving = false;
+                isBalancing = false;
+                playSound('roll');
+                checkPhysics();
+            }
         }
     }
 
@@ -378,7 +465,7 @@ function rollCube(direction) {
 function checkPhysics() {
     const key = `${player.position.x},${player.position.y - 1},${player.position.z}`;
     const floor = levelData[key];
-    
+
     if (floor && floor.userData.type === 'end') {
         alert(`Level Complete! Time: ${document.getElementById('timer').innerText}s`);
         exitToMenu();
@@ -397,6 +484,17 @@ function checkPhysics() {
         }
     }
 
+    // Edge Balancing Logic
+    const subFloorKey = `${Math.round(player.position.x)},${Math.round(player.position.y - 1)},${Math.round(player.position.z)}`;
+    if (!levelData[subFloorKey]) {
+        // We are over a void, but maybe balancing?
+        // In this simplified version, if we are not moving and not on a floor, we might be balancing 
+        // if we just rolled from a solid block.
+        // For now, let's trigger balancing if the player is at a non-integer position or specifically flagged.
+        // Actually, let's refine: if we are at an integer position but there's no floor, we fall.
+        // Balancing happens DURING or at the END of a move if we choose to hold.
+    }
+
     // Check switches
     let stateChanged = false;
     switches.forEach(s => {
@@ -405,12 +503,14 @@ function checkPhysics() {
             if (!s.userData.active) {
                 s.userData.active = true;
                 s.material.color.set(0x00ff00);
+                playSound('switch');
                 stateChanged = true;
             }
         } else {
             if (s.userData.active) {
                 s.userData.active = false;
                 s.material.color.set(0xffff00);
+                playSound('switch');
                 stateChanged = true;
             }
         }
@@ -423,6 +523,7 @@ function checkPhysics() {
             scene.remove(prisms[i]);
             prisms.splice(i, 1);
             collectedPrisms++;
+            playSound('prism');
             document.getElementById('prisms').innerText = collectedPrisms;
         }
     }
@@ -454,6 +555,7 @@ function fall() {
     isMoving = true;
     const startY = player.position.y;
     const targetY = -20; // Death floor
+    playSound('fall');
 
     function animateFall() {
         player.position.y -= 0.2;
@@ -485,41 +587,21 @@ window.loadLevelFromFile = () => {
 };
 
 window.startGame = () => {
-    gameState = 'playing';
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('hud').style.display = 'block';
-    setupLevel();
+    fadeTransition(() => {
+        gameState = 'playing';
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('hud').style.display = 'block';
+        setupLevel();
+        startTime = performance.now();
+    });
 };
 
 window.startEditor = () => {
     gameState = 'editor';
     document.getElementById('menu').style.display = 'none';
     document.getElementById('editor-ui').style.display = 'block';
-    controls.enabled = true;
-    setupEditor();
-};
-
-window.exitToMenu = () => {
-    gameState = 'menu';
-    document.getElementById('menu').style.display = 'block';
-    document.getElementById('hud').style.display = 'none';
-    document.getElementById('editor-ui').style.display = 'none';
-    controls.enabled = false;
-    // Clear scene except lights
-    while(scene.children.length > 2) {
-        const child = scene.children[scene.children.length - 1];
-        scene.remove(child);
-    }
-    ghostBlock = null;
-    levelData = {};
-};
-
-function setupLevel() {
-    // Placeholder for level loading
-    const geo = new THREE.BoxGeometry(1, 1, 1);
-    const mat = new THREE.MeshStandardMaterial({ color: 0x888888 });
-    for(let x = -2; x <= 2; x++) {
-        for(let z = -2; z <= 2; z++) {
+    for (let x = -2; x <= 2; x++) {
+        for (let z = -2; z <= 2; z++) {
             const block = new THREE.Mesh(geo, mat);
             block.position.set(x, 0, z);
             block.receiveShadow = true;
@@ -554,15 +636,28 @@ function setupEditor() {
 // --- Animation Loop ---
 function animate() {
     requestAnimationFrame(animate);
-    
+
     if (gameState === 'playing') {
         const elapsed = (performance.now() - startTime) / 1000;
         document.getElementById('timer').innerText = elapsed.toFixed(2);
         updateMovingPlatforms();
+        updateFollowCamera();
+        if (isBalancing) {
+            edgeTime += 0.016;
+            document.getElementById('edge-time').innerText = edgeTime.toFixed(2);
+        }
     }
 
-    controls.update();
+    if (gameState !== 'playing') controls.update();
     renderer.render(scene, camera);
+}
+
+function updateFollowCamera() {
+    if (!player) return;
+    const offset = new THREE.Vector3(8, 8, 8);
+    const targetPos = player.position.clone().add(offset);
+    camera.position.lerp(targetPos, 0.1);
+    camera.lookAt(player.position);
 }
 
 function updateMovingPlatforms() {
@@ -574,7 +669,7 @@ function updateMovingPlatforms() {
         }
         const oldPos = p.position.clone();
         p.position.lerpVectors(data.startPos, data.endPos, data.progress);
-        
+
         // If player is on top, move player
         if (player && !isMoving) {
             const dist = player.position.clone().sub(p.position);
@@ -582,8 +677,88 @@ function updateMovingPlatforms() {
                 const delta = p.position.clone().sub(oldPos);
                 player.position.add(delta);
             }
+
+            // Crush Logic
+            if (Math.abs(dist.x) < 0.8 && Math.abs(dist.z) < 0.8 && Math.abs(dist.y) < 0.8) {
+                // Player is inside the platform (crushed)
+                player.position.copy(spawnPos);
+            }
         }
     });
+}
+
+// --- Audio System ---
+function initAudio() {
+    if (audioCtx) return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playSound(type) {
+    initAudio();
+    if (!audioCtx) return;
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    const now = audioCtx.currentTime;
+
+    switch (type) {
+        case 'roll':
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.exponentialRampToValueAtTime(50, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+            break;
+        case 'climb':
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(200, now);
+            osc.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+            break;
+        case 'prism':
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(800, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.2);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+            osc.start(now);
+            osc.stop(now + 0.2);
+            break;
+        case 'switch':
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+            break;
+        case 'fall':
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(400, now);
+            osc.frequency.exponentialRampToValueAtTime(100, now + 1);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 1);
+            osc.start(now);
+            osc.stop(now + 1);
+            break;
+    }
+}
+
+function fadeTransition(callback) {
+    const overlay = document.getElementById('fade-overlay');
+    overlay.style.opacity = 1;
+    setTimeout(() => {
+        callback();
+        overlay.style.opacity = 0;
+    }, 500);
 }
 
 init();
