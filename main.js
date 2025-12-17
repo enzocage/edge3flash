@@ -10,6 +10,7 @@ let player = null;
 let isMoving = false;
 let isShrunk = false;
 const moveSpeed = 0.2;
+let isTesting = false;
 
 let startTime = 0;
 let spawnPos = new THREE.Vector3(0, 1, 0);
@@ -31,6 +32,32 @@ let redoStack = [];
 const MAX_UNDO = 50;
 
 let audioCtx = null;
+let minimapRenderer, minimapCamera;
+
+const BUILT_IN_LEVELS = [
+    {
+        name: "Training",
+        blocks: [
+            { pos: [-1, 0, -1], type: 'normal' }, { pos: [0, 0, -1], type: 'normal' }, { pos: [1, 0, -1], type: 'normal' },
+            { pos: [-1, 0, 0], type: 'normal' }, { pos: [0, 0, 0], type: 'normal' }, { pos: [1, 0, 0], type: 'normal' },
+            { pos: [-1, 0, 1], type: 'normal' }, { pos: [0, 0, 1], type: 'normal' }, { pos: [1, 0, 1], type: 'normal' },
+            { pos: [2, 0, 1], type: 'normal' }, { pos: [3, 0, 1], type: 'normal' },
+            { pos: [3, 0, 2], type: 'normal' }, { pos: [3, 0, 3], type: 'end' },
+            { pos: [1, 1, 0], type: 'prism' }
+        ]
+    },
+    {
+        name: "The Leap",
+        blocks: [
+            { pos: [0, 0, 0], type: 'normal' }, { pos: [1, 0, 0], type: 'normal' }, { pos: [2, 0, 0], type: 'normal' },
+            { pos: [4, 0, 0], type: 'normal' }, { pos: [5, 0, 0], type: 'normal' }, { pos: [6, 0, 0], type: 'end' },
+            { pos: [3, 0, 0], type: 'moving', startPos: [3, 0, -2], endPos: [3, 0, 2], speed: 0.05 }
+        ]
+    }
+];
+
+let unlockedLevels = JSON.parse(localStorage.getItem('unlockedLevels')) || [0];
+let highScores = JSON.parse(localStorage.getItem('highScores')) || {};
 
 // --- Initialization ---
 function init() {
@@ -60,15 +87,36 @@ function init() {
     controls = new OrbitControls(camera, renderer.domElement);
     controls.enabled = false;
 
+    // Minimap Init
+    setupMinimap();
+
     window.addEventListener('resize', onWindowResize);
     window.addEventListener('keydown', onKeyDown);
     window.addEventListener('mousemove', onMouseMove);
     window.addEventListener('mousedown', onMouseDown);
+    window.addEventListener('touchstart', () => {
+        document.getElementById('mobile-controls').style.display = 'grid';
+    }, { once: true });
 
     document.getElementById('load-btn').onclick = () => document.getElementById('level-input').click();
     document.getElementById('level-input').onchange = loadLevel;
 
     animate();
+}
+
+function setupMinimap() {
+    const minimapSize = 200;
+    minimapCamera = new THREE.OrthographicCamera(-10, 10, 10, -10, 1, 100);
+    minimapCamera.position.set(0, 50, 0);
+    minimapCamera.lookAt(0, 0, 0);
+
+    minimapRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    minimapRenderer.setSize(minimapSize, minimapSize);
+    minimapRenderer.setClearColor(0x000000, 0.5);
+    const minimapContainer = document.getElementById('minimap-container');
+    if (minimapContainer) {
+        minimapContainer.appendChild(minimapRenderer.domElement);
+    }
 }
 
 function loadLevel(event) {
@@ -327,6 +375,13 @@ window.saveLevel = async () => {
                 });
             }
         });
+        const validation = validateLevel(blocks);
+        if (!validation.valid) {
+            if (!confirm("Level Validation Warning:\n" + validation.errors.join("\n") + "\n\nDo you want to save anyway?")) {
+                return;
+            }
+        }
+
         const level = {
             metadata: { name: "New Level", author: "Player", timestamp: new Date().toISOString() },
             blocks: blocks
@@ -375,8 +430,36 @@ window.saveLevel = async () => {
     } catch (err) {
         console.error("Save Level Error:", err);
         alert("Error saving level: " + err.message + "\nCheck console (F12) for data.");
-        console.log("LEVEL DATA:", JSON.stringify(level, null, 2));
     }
+};
+
+function validateLevel(blocks) {
+    const errors = [];
+    const counts = { start: 0, end: 0 };
+    blocks.forEach(b => {
+        if (b.type === 'normal' && b.pos[0] === 0 && b.pos[1] === 0 && b.pos[2] === 0) counts.start++; // Simplified start detection
+        if (b.type === 'end') counts.end++;
+    });
+
+    // In this implementation, start is implicitly 0,0,0 or we could have a start block type.
+    // Let's assume the spec means we need an end block.
+    if (counts.end === 0) errors.push("Level needs at least one 'End' block.");
+
+    return {
+        valid: errors.length === 0,
+        errors: errors
+    };
+}
+
+window.move = (directionStr) => {
+    if (gameState !== 'playing' || isMoving) return;
+    let dir = new THREE.Vector3();
+    if (directionStr === 'up') dir.set(0, 0, -1);
+    if (directionStr === 'down') dir.set(0, 0, 1);
+    if (directionStr === 'left') dir.set(-1, 0, 0);
+    if (directionStr === 'right') dir.set(1, 0, 0);
+
+    processMove(dir);
 };
 
 function onKeyDown(event) {
@@ -385,23 +468,48 @@ function onKeyDown(event) {
         saveLevel();
         return;
     }
+    if (gameState === 'editor') {
+        // ... editor shortcuts ...
+        if (event.key === '1') setBlockType('normal');
+        if (event.key === '2') setBlockType('prism');
+        if (event.key === '3') setBlockType('moving');
+        if (event.key === '4') setBlockType('end');
+        if (event.key === '5') setBlockType('switch');
+        if (event.key === '6') setBlockType('ghost');
+        if (event.key === '7') setBlockType('shrink');
+        if (event.key === '8') setBlockType('checkpoint');
+        if (event.key === 'b') setTool('brush');
+        if (event.key === 'e') setTool('eraser');
+        if (event.key === 'g') {
+            const helper = scene.children.find(c => c instanceof THREE.GridHelper);
+            if (helper) helper.visible = !helper.visible;
+        }
+    }
+
     if (gameState !== 'playing' || isMoving) return;
 
     let dir = new THREE.Vector3();
-    switch (event.key) {
-        case 'ArrowUp': case 'w': dir.set(0, 0, -1); break;
-        case 'ArrowDown': case 's': dir.set(0, 0, 1); break;
-        case 'ArrowLeft': case 'a': dir.set(-1, 0, 0); break;
-        case 'ArrowRight': case 'd': dir.set(1, 0, 0); break;
+    switch (event.key.toLowerCase()) {
+        case 'arrowup': case 'w': dir.set(0, 0, -1); break;
+        case 'arrowdown': case 's': dir.set(0, 0, 1); break;
+        case 'arrowleft': case 'a': dir.set(-1, 0, 0); break;
+        case 'arrowright': case 'd': dir.set(1, 0, 0); break;
         case 'z': if (event.ctrlKey) undo(); break;
         case 'y': if (event.ctrlKey) redo(); break;
         default: return;
     }
+    processMove(dir);
+}
 
+function processMove(dir) {
     // Check for climbing
     const targetPos = player.position.clone().add(dir);
-    const obstacleKey = `${targetPos.x},${targetPos.y},${targetPos.z}`;
-    const aboveObstacleKey = `${targetPos.x},${targetPos.y + 1},${targetPos.z}`;
+    const tx = Math.round(targetPos.x);
+    const ty = Math.round(targetPos.y);
+    const tz = Math.round(targetPos.z);
+
+    const obstacleKey = `${tx},${ty},${tz}`;
+    const aboveObstacleKey = `${tx},${ty + 1},${tz}`;
 
     if (levelData[obstacleKey] && !levelData[aboveObstacleKey]) {
         climbCube(dir);
@@ -486,17 +594,31 @@ function rollCube(direction) {
             requestAnimationFrame(animateRoll);
         } else {
             // Check if target has floor
-            const targetFloorKey = `${Math.round(targetPosition.x)},${Math.round(targetPosition.y - 1)},${Math.round(targetPosition.z)}`;
+            const tx = Math.round(targetPosition.x);
+            const ty = Math.round(targetPosition.y);
+            const tz = Math.round(targetPosition.z);
+            const targetFloorKey = `${tx},${ty - 1},${tz}`;
+
             if (!levelData[targetFloorKey]) {
-                // Enter balancing state
-                isBalancing = true;
-                player.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
-                // Tilt slightly to show balancing
-                player.rotation.z += 0.1;
-                isMoving = false;
+                if (isBalancing) {
+                    // Already balancing, now we fall
+                    player.position.set(tx, ty, tz);
+                    isBalancing = false;
+                    fall();
+                } else {
+                    // Enter balancing state
+                    isBalancing = true;
+                    player.position.set(targetPosition.x, targetPosition.y, targetPosition.z);
+                    // Tilt slightly to show balancing based on direction
+                    if (direction.x !== 0) player.rotation.z = direction.x * 0.2;
+                    if (direction.z !== 0) player.rotation.x = -direction.z * 0.2;
+                    isMoving = false;
+                    playSound('roll');
+                }
             } else {
                 // Snap to grid
-                player.position.set(Math.round(targetPosition.x), Math.round(targetPosition.y), Math.round(targetPosition.z));
+                player.position.set(tx, ty, tz);
+                player.rotation.set(0, 0, 0); // Reset tilt
                 isMoving = false;
                 isBalancing = false;
                 playSound('roll');
@@ -513,7 +635,22 @@ function checkPhysics() {
     const floor = levelData[key];
 
     if (floor && floor.userData.type === 'end') {
-        alert(`Level Complete! Time: ${document.getElementById('timer').innerText}s`);
+        const time = ((performance.now() - startTime) / 1000).toFixed(2);
+        alert(`Level Complete! Time: ${time}s`);
+
+        // Save Progress
+        const currentLevelIndex = BUILT_IN_LEVELS.findIndex(l => l.active);
+        if (currentLevelIndex !== -1) {
+            if (!unlockedLevels.includes(currentLevelIndex + 1)) {
+                unlockedLevels.push(currentLevelIndex + 1);
+                localStorage.setItem('unlockedLevels', JSON.stringify(unlockedLevels));
+            }
+            if (!highScores[currentLevelIndex] || time < highScores[currentLevelIndex]) {
+                highScores[currentLevelIndex] = time;
+                localStorage.setItem('highScores', JSON.stringify(highScores));
+            }
+        }
+
         exitToMenu();
         return;
     }
@@ -580,7 +717,11 @@ function toggleShrink() {
     const scale = isShrunk ? 0.5 : 1.0;
     player.scale.set(scale, scale, scale);
     // Adjust position so it doesn't sink into floor
-    player.position.y = isShrunk ? player.position.y - 0.25 : Math.round(player.position.y);
+    if (isShrunk) {
+        player.position.y -= 0.25;
+    } else {
+        player.position.y = Math.round(player.position.y);
+    }
 }
 
 function toggleGhostBlocks() {
@@ -628,35 +769,44 @@ function onWindowResize() {
 }
 
 window.exitToMenu = () => {
+    if (isTesting) {
+        returnToEditor();
+        return;
+    }
     fadeTransition(() => {
         gameState = 'menu';
         document.getElementById('menu').style.display = 'block';
         document.getElementById('hud').style.display = 'none';
         document.getElementById('editor-ui').style.display = 'none';
-        controls.enabled = false;
-        // Clear scene except lights
-        while (scene.children.length > 2) {
-            const child = scene.children[scene.children.length - 1];
-            scene.remove(child);
-        }
-        ghostBlock = null;
-        levelData = {};
+        document.getElementById('minimap-container').style.display = 'none';
+        location.reload(); // Simplest way to reset all state for now
     });
 };
 
-// --- Game Logic ---
+window.returnToEditor = () => {
+    fadeTransition(() => {
+        isTesting = false;
+        gameState = 'editor';
+        document.getElementById('hud').style.display = 'none';
+        document.getElementById('editor-ui').style.display = 'block';
+        controls.enabled = true;
+
+        // Restore editor objects
+        setupEditor();
+
+        // Remove player
+        if (player) {
+            scene.remove(player);
+            player = null;
+        }
+
+        // Reset levelData for editor raycasting if needed
+        // (Actually levelData is used for physics, editor uses raycasting against scene meshes)
+    });
+};
+
 window.loadLevelFromFile = () => {
     document.getElementById('level-input').click();
-};
-
-window.startGame = () => {
-    fadeTransition(() => {
-        gameState = 'playing';
-        document.getElementById('menu').style.display = 'none';
-        document.getElementById('hud').style.display = 'block';
-        setupLevel();
-        startTime = performance.now();
-    });
 };
 
 window.startEditor = () => {
@@ -664,26 +814,131 @@ window.startEditor = () => {
         gameState = 'editor';
         document.getElementById('menu').style.display = 'none';
         document.getElementById('editor-ui').style.display = 'block';
+        document.getElementById('minimap-container').style.display = 'block';
         controls.enabled = true;
         setupEditor();
     });
 };
 
-function setupLevel() {
-    // Placeholder for level loading
-    for (let x = -2; x <= 2; x++) {
-        for (let z = -2; z <= 2; z++) {
-            addBlock(x, 0, z, 'normal');
+window.playEditedLevel = () => {
+    isTesting = true;
+    const blocks = [];
+    scene.traverse(child => {
+        if (child.isMesh && child.userData && child.userData.type && child !== player && child.name !== 'basePlane') {
+            blocks.push({
+                type: child.userData.type,
+                pos: [child.position.x, child.position.y, child.position.z],
+                // For moving platforms, we'd need to save their path data too if we wanted it per-block
+                // For now, moving platforms in editor have default paths
+                startPos: child.userData.startPos ? [child.userData.startPos.x, child.userData.startPos.y, child.userData.startPos.z] : null,
+                endPos: child.userData.endPos ? [child.userData.endPos.x, child.userData.endPos.y, child.userData.endPos.z] : null,
+                speed: child.userData.speed || 0.02
+            });
         }
-    }
+    });
 
-    // Player
-    const playerGeo = new THREE.BoxGeometry(1, 1, 1);
-    const playerMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    player = new THREE.Mesh(playerGeo, playerMat);
-    player.position.set(0, 1, 0);
-    player.castShadow = true;
-    scene.add(player);
+    fadeTransition(() => {
+        gameState = 'playing';
+        document.getElementById('editor-ui').style.display = 'none';
+        document.getElementById('hud').style.display = 'block';
+
+        // Remove editor-only objects
+        const grid = scene.children.find(c => c instanceof THREE.GridHelper);
+        if (grid) scene.remove(grid);
+        const plane = scene.children.find(c => c.name === 'basePlane');
+        if (plane) scene.remove(plane);
+        if (ghostBlock) {
+            scene.remove(ghostBlock);
+            ghostBlock = null;
+        }
+
+        // We don't clearScene because we already have the blocks!
+        // But we need to reset the player and interactive states
+        if (player) scene.remove(player);
+        spawnPlayer();
+
+        // Re-initialize interactive arrays for the current blocks
+        movingPlatforms = [];
+        switches = [];
+        ghostBlocks = [];
+        prisms = [];
+        levelData = {};
+
+        scene.traverse(child => {
+            if (child.isMesh && child.userData && child.userData.type && child !== player && child.name !== 'basePlane') {
+                const type = child.userData.type;
+                const pos = child.position;
+                const key = `${pos.x},${pos.y},${pos.z}`;
+
+                if (type === 'prism') prisms.push(child);
+                else if (type === 'moving') movingPlatforms.push(child);
+                else if (type === 'switch') switches.push(child);
+                else if (type === 'ghost') ghostBlocks.push(child);
+                else if (type !== 'start') levelData[key] = child;
+            }
+        });
+
+        startTime = performance.now();
+        collectedPrisms = 0;
+        document.getElementById('prisms').innerText = '0';
+        controls.enabled = false;
+    });
+};
+
+window.showLevelSelector = () => {
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('level-selector').style.display = 'block';
+    const list = document.getElementById('level-list');
+    list.innerHTML = '';
+    BUILT_IN_LEVELS.forEach((level, i) => {
+        const isLocked = !unlockedLevels.includes(i);
+        const card = document.createElement('div');
+        card.className = `level-card ${isLocked ? 'locked' : ''}`;
+        card.innerHTML = `
+            <div>Level ${i + 1}</div>
+            <div style="font-size: 14px;">${level.name}</div>
+            ${highScores[i] ? `<div style="font-size: 10px; color: var(--accent);">Best: ${highScores[i]}s</div>` : ''}
+        `;
+        if (!isLocked) card.onclick = () => startLevel(i);
+        list.appendChild(card);
+    });
+};
+
+window.showMenu = () => {
+    document.getElementById('level-selector').style.display = 'none';
+    document.getElementById('menu').style.display = 'block';
+};
+
+function startLevel(index) {
+    fadeTransition(() => {
+        gameState = 'playing';
+        document.getElementById('level-selector').style.display = 'none';
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('hud').style.display = 'block';
+        document.getElementById('minimap-container').style.display = 'block';
+
+        clearScene();
+        const level = BUILT_IN_LEVELS[index];
+        BUILT_IN_LEVELS.forEach(l => l.active = false);
+        level.active = true;
+
+        level.blocks.forEach(b => {
+            const m = addBlock(b.pos[0], b.pos[1], b.pos[2], b.type);
+            if (b.type === 'moving' && m) {
+                m.userData.startPos = new THREE.Vector3(...b.startPos);
+                m.userData.endPos = new THREE.Vector3(...b.endPos);
+                m.userData.speed = b.speed;
+            }
+        });
+        spawnPlayer();
+        startTime = performance.now();
+        collectedPrisms = 0;
+        document.getElementById('prisms').innerText = '0';
+    });
+}
+
+function setupLevel() {
+    startLevel(0);
 }
 
 function setupEditor() {
@@ -717,6 +972,12 @@ function animate() {
 
     if (gameState !== 'playing') controls.update();
     renderer.render(scene, camera);
+
+    if (gameState === 'playing' && minimapRenderer && minimapCamera) {
+        minimapCamera.position.x = player.position.x;
+        minimapCamera.position.z = player.position.z;
+        minimapRenderer.render(scene, minimapCamera);
+    }
 }
 
 function updateFollowCamera() {
