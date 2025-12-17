@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge Clone</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; font-family: sans-serif; }
+        #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; color: white; z-index: 10; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #ui-layer > * { pointer-events: auto; }
+        .hud { position: absolute; top: 20px; left: 20px; font-size: 24px; }
+        .editor-controls { position: absolute; bottom: 20px; background: rgba(0,0,0,0.7); padding: 10px; border-radius: 8px; display: none; }
+        .editor-controls button { margin: 0 5px; padding: 8px 12px; cursor: pointer; }
+        #menu { text-align: center; background: rgba(0,0,0,0.8); padding: 40px; border-radius: 15px; }
+        button { background: #444; color: white; border: none; padding: 10px 20px; font-size: 18px; cursor: pointer; border-radius: 5px; }
+        button:hover { background: #666; }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+    <div id="ui-layer">
+        <div id="menu">
+            <h1>EDGE CLONE</h1>
+            <button onclick="startGame()">Start Game</button>
+            <button onclick="startEditor()">Level Editor</button>
+            <div style="margin-top: 20px;">
+                <button onclick="loadLevelFromFile()">Load Level File</button>
+            </div>
+        </div>
+        <div class="hud" id="hud" style="display: none;">
+            Time: <span id="timer">0.00</span> | Prisms: <span id="prisms">0</span>
+        </div>
+        <div class="editor-controls" id="editor-ui">
+            <button onclick="setTool('brush')">Brush (1)</button>
+            <button onclick="setTool('eraser')">Eraser (2)</button>
+            <select id="block-type" onchange="setBlockType(this.value)" style="pointer-events: auto;">
+                <option value="normal">Normal Block</option>
+                <option value="prism">Prism</option>
+                <option value="moving">Moving Platform</option>
+                <option value="end">End Block</option>
+                <option value="switch">Switch</option>
+                <option value="ghost">Ghost Block</option>
+                <option value="shrink">Shrink Pad</option>
+                <option value="checkpoint">Checkpoint</option>
+            </select>
+            <button onclick="saveLevel()">Save JSON (Ctrl+S)</button>
+            <button id="load-btn">Load JSON</button>
+            <input type="file" id="level-input" style="display: none;" accept=".json">
+            <button onclick="exitToMenu()">Exit</button>
+        </div>
+    </div>
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>
