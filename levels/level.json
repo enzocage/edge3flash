@@ -1,0 +1,1169 @@
+{
+  "metadata": {
+    "name": "New Level",
+    "author": "Player",
+    "timestamp": "2025-12-17T19:19:37.020Z"
+  },
+  "blocks": [
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "ice",
+      "pos": [
+        -1,
+        1,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        1,
+        -1
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        1,
+        -2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        2,
+        -1
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        2,
+        -1
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        2,
+        -2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        1,
+        2,
+        -2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        2,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        2,
+        1
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        2,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        2,
+        3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        1,
+        3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        1,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        0,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "fragile",
+      "pos": [
+        -2,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -2,
+        0,
+        3
+      ]
+    },
+    {
+      "type": "fragile",
+      "pos": [
+        -1,
+        0,
+        3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        1,
+        3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        2,
+        3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        2,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        2,
+        1
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        3,
+        1
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        3,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        4,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        4,
+        3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        4,
+        4
+      ]
+    },
+    {
+      "type": "ice",
+      "pos": [
+        -2,
+        4,
+        4
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -2,
+        4,
+        3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -2,
+        4,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -2,
+        3,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        1,
+        2,
+        2
+      ]
+    },
+    {
+      "type": "fragile",
+      "pos": [
+        1,
+        2,
+        1
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        1,
+        1,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        2,
+        2,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        3,
+        2,
+        2
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        0,
+        0,
+        -9
+      ]
+    },
+    {
+      "type": "switch",
+      "pos": [
+        -11,
+        4,
+        -3
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        -14,
+        2,
+        5
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        -11,
+        4,
+        -12
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        -1,
+        1,
+        -4
+      ]
+    },
+    {
+      "type": "switch",
+      "pos": [
+        13,
+        3,
+        -11
+      ]
+    },
+    {
+      "type": "shrink",
+      "pos": [
+        -3,
+        0,
+        -9
+      ]
+    },
+    {
+      "type": "moving",
+      "pos": [
+        -14,
+        1,
+        14
+      ]
+    },
+    {
+      "type": "bouncy",
+      "pos": [
+        9,
+        3,
+        -2
+      ]
+    },
+    {
+      "type": "switch",
+      "pos": [
+        -5,
+        1,
+        -11
+      ]
+    },
+    {
+      "type": "gravity",
+      "pos": [
+        9,
+        0,
+        -13
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        7,
+        4,
+        -13
+      ]
+    },
+    {
+      "type": "shrink",
+      "pos": [
+        -7,
+        1,
+        -1
+      ]
+    },
+    {
+      "type": "gravity",
+      "pos": [
+        -3,
+        4,
+        -11
+      ]
+    },
+    {
+      "type": "laser",
+      "pos": [
+        -15,
+        3,
+        10
+      ]
+    },
+    {
+      "type": "laser",
+      "pos": [
+        -10,
+        4,
+        -13
+      ]
+    },
+    {
+      "type": "moving",
+      "pos": [
+        1,
+        3,
+        -3
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        10,
+        0,
+        12
+      ]
+    },
+    {
+      "type": "checkpoint",
+      "pos": [
+        2,
+        0,
+        -8
+      ]
+    },
+    {
+      "type": "magnetic",
+      "pos": [
+        13,
+        1,
+        -11
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        3,
+        1,
+        6
+      ]
+    },
+    {
+      "type": "explosive",
+      "pos": [
+        9,
+        3,
+        6
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        13,
+        0,
+        -12
+      ]
+    },
+    {
+      "type": "checkpoint",
+      "pos": [
+        -9,
+        2,
+        10
+      ]
+    },
+    {
+      "type": "magnetic",
+      "pos": [
+        -1,
+        3,
+        5
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        -15,
+        4,
+        13
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        8,
+        0,
+        -10
+      ]
+    },
+    {
+      "type": "ghost",
+      "pos": [
+        8,
+        1,
+        2
+      ]
+    },
+    {
+      "type": "checkpoint",
+      "pos": [
+        -7,
+        4,
+        -9
+      ]
+    },
+    {
+      "type": "shrink",
+      "pos": [
+        3,
+        4,
+        1
+      ]
+    },
+    {
+      "type": "laser",
+      "pos": [
+        -2,
+        1,
+        -11
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        11,
+        0,
+        5
+      ]
+    },
+    {
+      "type": "ghost",
+      "pos": [
+        4,
+        1,
+        8
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        14,
+        1,
+        -10
+      ]
+    },
+    {
+      "type": "laser",
+      "pos": [
+        11,
+        1,
+        4
+      ]
+    },
+    {
+      "type": "moving",
+      "pos": [
+        -15,
+        4,
+        13
+      ]
+    },
+    {
+      "type": "switch",
+      "pos": [
+        -14,
+        3,
+        8
+      ]
+    },
+    {
+      "type": "ghost",
+      "pos": [
+        -8,
+        3,
+        -13
+      ]
+    },
+    {
+      "type": "laser",
+      "pos": [
+        3,
+        4,
+        -10
+      ]
+    },
+    {
+      "type": "shrink",
+      "pos": [
+        0,
+        0,
+        8
+      ]
+    },
+    {
+      "type": "laser",
+      "pos": [
+        -2,
+        1,
+        -10
+      ]
+    },
+    {
+      "type": "bouncy",
+      "pos": [
+        -5,
+        0,
+        14
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        3,
+        1,
+        14
+      ]
+    },
+    {
+      "type": "gravity",
+      "pos": [
+        -3,
+        1,
+        10
+      ]
+    },
+    {
+      "type": "magnetic",
+      "pos": [
+        5,
+        3,
+        11
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        -11,
+        1,
+        9
+      ]
+    },
+    {
+      "type": "shrink",
+      "pos": [
+        12,
+        0,
+        -11
+      ]
+    },
+    {
+      "type": "bouncy",
+      "pos": [
+        -4,
+        4,
+        11
+      ]
+    },
+    {
+      "type": "magnetic",
+      "pos": [
+        -8,
+        0,
+        -2
+      ]
+    },
+    {
+      "type": "shrink",
+      "pos": [
+        10,
+        0,
+        -14
+      ]
+    },
+    {
+      "type": "laser",
+      "pos": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        -9,
+        4,
+        -11
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        -8,
+        2,
+        -3
+      ]
+    },
+    {
+      "type": "checkpoint",
+      "pos": [
+        -1,
+        4,
+        -3
+      ]
+    },
+    {
+      "type": "moving",
+      "pos": [
+        -10,
+        2,
+        1
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        -13,
+        3,
+        8
+      ]
+    },
+    {
+      "type": "prism",
+      "pos": [
+        7,
+        0,
+        -3
+      ]
+    },
+    {
+      "type": "bouncy",
+      "pos": [
+        -11,
+        2,
+        -8
+      ]
+    },
+    {
+      "type": "teleporter",
+      "pos": [
+        -8,
+        2,
+        -12
+      ]
+    },
+    {
+      "type": "shrink",
+      "pos": [
+        6,
+        2,
+        7
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -4,
+        0,
+        -4
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -15,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -6,
+        0,
+        -8
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        1,
+        0,
+        -15
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -8,
+        0,
+        12
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        11,
+        0,
+        -13
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -3,
+        0,
+        -11
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        11,
+        0,
+        7
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        14,
+        0,
+        -15
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -8,
+        0,
+        8
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        1,
+        0,
+        9
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        7,
+        0,
+        -5
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        12,
+        0,
+        11
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        11,
+        0,
+        -3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -4,
+        0,
+        -7
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        6,
+        0,
+        -6
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -1,
+        0,
+        6
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        4,
+        0,
+        -12
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        8,
+        0,
+        3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -4,
+        0,
+        -9
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        4,
+        0,
+        -9
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        14,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        7,
+        0,
+        -15
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        13,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -14,
+        0,
+        -2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        7,
+        0,
+        -7
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -6,
+        0,
+        6
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -14,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        12,
+        0,
+        -13
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        6,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        13,
+        0,
+        14
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        6,
+        0,
+        -4
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        13,
+        0,
+        -3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        10,
+        0,
+        -3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -12,
+        0,
+        -11
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        6,
+        0,
+        -10
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -10,
+        0,
+        2
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -15,
+        0,
+        10
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        3,
+        0,
+        0
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -12,
+        0,
+        -6
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -2,
+        0,
+        -15
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -10,
+        0,
+        -3
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -4,
+        0,
+        7
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        -9,
+        0,
+        -9
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        7,
+        0,
+        -6
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        13,
+        0,
+        5
+      ]
+    },
+    {
+      "type": "normal",
+      "pos": [
+        2,
+        0,
+        8
+      ]
+    }
+  ]
+}

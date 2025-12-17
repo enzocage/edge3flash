@@ -165,6 +165,28 @@
 - **Input**: Keyboard (Arrows/WASD) for movement.
 - **Editor**: Raycasting to place/remove blocks on a grid.
 
+## Advanced Features & Future Roadmap
+1.  **Teleporters**: Linked pads (A and B) that instantaneously move the cube between coordinates.
+2.  **Lasers & Detectors**: Hazard beams that "crush" the player if touched; can be blocked by moving blocks or specific "Reflector" blocks.
+3.  **One-Way Paths**: Directional blocks that only allow the cube to roll over them in specific orientations.
+4.  **Timed/Phased Blocks**: Blocks that appear and disappear on a loop or collapse 2 seconds after being stood upon (Fragile Blocks).
+5.  **Magnetic Surfaces**: Specific metallic blocks that allow the cube to roll up walls or across ceilings, changing the local gravity vector.
+6.  **Slippery/Bouncy Physics**: Friction modifiers on "Ice" blocks (continued sliding) and repulsion force on "Rubber" blocks (bounce height).
+7.  **Logic Gates**: A "Wire" system in the editor to connect multiple switches to a single object using AND/OR/NOT logic.
+8.  **Gravity Rotation**: Level-wide events triggered by switches that rotate the entire world's gravity by 90 or 180 degrees.
+9.  **Explosive Blocks**: Detonate after a 1-second delay when touched, destroying nearby "Destructible" blocks and launching the cube.
+10. **Ghost Mode**: Display a translucent replay of the player's best run or a "Target Time" ghost to compete against.
+11. **Camera Shake**: Procedural screen shake during heavy landings, explosions, or when a "Crush" event occurs.
+12. **Customizable Cube Trails**: Visual particle streaks or Ribbons trailing behind the cube, with unlockable colors/patterns.
+13. **Dynamic Music Engine**: Ambient tracks that increase in complexity or tempo as the player nears the goal or collects prisms.
+14. **In-Editor Scripting**: A node-based UI or simple JSON trigger system for advanced level events (e.g., "On Prism Collect -> Open Door").
+15. **Leaderboards & Community**: Integrated global scoring and the ability to browse/load community-created JSON levels directly.
+16. **Photo Mode**: A dedicated pause state that allows free camera movement, FOV adjustment, and filter application for high-quality screenshots.
+17. **Controller Support**: Full integration for XInput/DualShock controllers via the Gamepad API, including haptic feedback (vibration).
+18. **Infinite Mode**: A procedurally generated "Survival" mode where the player navigates an endless, randomly assembly of grid chunks.
+19. **Asset Export for 3D Printing**: A tool to export the current level or a custom cube skin as an STL file for physical modeling.
+20. **Accessibility Suite**: High-contrast block modes, rebindable controls, and screen-shaking/flash toggles for sensitive players.
+
 ## Workflow Diagram
 ```mermaid
 graph TD

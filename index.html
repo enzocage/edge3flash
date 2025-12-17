@@ -235,12 +235,13 @@
         <div id="menu">
             <h1>EDGE CLONE</h1>
             <button onclick="showLevelSelector()">Select Level</button>
+            <button onclick="startInfiniteMode()">Infinite Mode</button>
             <button onclick="startEditor()">Level Editor</button>
             <div style="margin-top: 20px;">
                 <button onclick="loadLevelFromFile()">Load From File</button>
             </div>
             <div style="margin-top: 20px; font-size: 12px; opacity: 0.6;">
-                Controls: WASD/Arrows to Move | Ctrl+S Save | Ctrl+Z Undo
+                Controls: WASD/Arrows to Move | P: Photo Mode | H: High Contrast | Ctrl+S Save | Ctrl+Z Undo
             </div>
         </div>
 
@@ -276,12 +277,24 @@
                 <option value="ghost">Ghost Block</option>
                 <option value="shrink">Shrink Pad</option>
                 <option value="checkpoint">Checkpoint</option>
+                <option value="teleporter">Teleporter</option>
+                <option value="fragile">Fragile Block</option>
+                <option value="oneway">One-Way Path</option>
+                <option value="ice">Ice (Slippery)</option>
+                <option value="bouncy">Bouncy Block</option>
+                <option value="explosive">Explosive Block</option>
+                <option value="laser">Laser Hazard</option>
+                <option value="magnetic">Magnetic Block</option>
+                <option value="gravity">Gravity Switch</option>
             </select>
             <button onclick="saveLevel()">Save (Ctrl+S)</button>
             <button onclick="playEditedLevel()" style="background: var(--accent); color: black;">Play Level</button>
             <button onclick="undo()">Undo (Ctrl+Z)</button>
             <button onclick="redo()">Redo (Ctrl+Y)</button>
             <button id="load-btn">Load JSON</button>
+            <button onclick="exportToSTL()" style="background: #444;">Export STL</button>
+            <button onclick="generateRandomLevel()" style="background: var(--accent); color: black;">Random
+                Level</button>
             <input type="file" id="level-input" style="display: none;" accept=".json">
             <button onclick="exitToMenu()">Exit</button>
         </div>
