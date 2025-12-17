@@ -597,27 +597,14 @@ window.startGame = () => {
 };
 
 window.startEditor = () => {
-    gameState = 'editor';
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('editor-ui').style.display = 'block';
-    for (let x = -2; x <= 2; x++) {
-        for (let z = -2; z <= 2; z++) {
-            const block = new THREE.Mesh(geo, mat);
-            block.position.set(x, 0, z);
-            block.receiveShadow = true;
-            scene.add(block);
-            levelData[`${x},0,${z}`] = block;
-        }
-    }
-
-    // Player
-    const playerGeo = new THREE.BoxGeometry(1, 1, 1);
-    const playerMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
-    player = new THREE.Mesh(playerGeo, playerMat);
-    player.position.set(0, 1, 0);
-    player.castShadow = true;
-    scene.add(player);
-}
+    fadeTransition(() => {
+        gameState = 'editor';
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('editor-ui').style.display = 'block';
+        controls.enabled = true;
+        setupEditor();
+    });
+};
 
 function setupEditor() {
     const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
